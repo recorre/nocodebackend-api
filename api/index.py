@@ -74,8 +74,8 @@ except ImportError:
 
 # Include route modules
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
-app.include_router(threads.router, prefix="/threads", tags=["threads"])
-app.include_router(comments.router, prefix="/comments", tags=["comments"])
+app.include_router(threads.router, prefix="/api/v1/threads", tags=["threads"])
+app.include_router(comments.router, prefix="/api/v1/comments", tags=["comments"])
 app.include_router(widget.router, prefix="/widget", tags=["widget"])
 app.include_router(advanced.router, prefix="/api", tags=["advanced"])
 
