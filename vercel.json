@@ -13,7 +13,7 @@
     }
   ],
   "env": {
-    "NOCODEBACKEND_API_KEY": "@nocodebackend_api_key",
+   
     "INSTANCE": "41300_teste"
   }
 }
