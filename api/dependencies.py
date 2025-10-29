@@ -15,8 +15,7 @@ INSTANCE = os.getenv("INSTANCE", "41300_teste")
 API_KEY = os.getenv("NOCODEBACKEND_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
 
-# Global HTTP client
-http_client = httpx.AsyncClient(timeout=30.0)
+# HTTP client will be created per request (no global client for serverless compatibility)
 
 # Logger
 logger = structlog.get_logger()
@@ -41,7 +40,7 @@ def hash_email(email: str) -> str:
 
 
 async def nocodebackend_request(method: str, endpoint: str, data: Optional[Dict[str, Any]] = None, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Wrapper para requisições ao NoCodeBackend"""
+    """Wrapper para requisições ao NoCodeBackend com context-managed HTTP client"""
     url = f"{NOCODEBACKEND_URL}/{endpoint}"
 
     # Adiciona Instance aos params
@@ -58,16 +57,17 @@ async def nocodebackend_request(method: str, endpoint: str, data: Optional[Dict[
             params=params
         )
 
-        if method == "GET":
-            response = await http_client.get(url, headers=get_headers(), params=params)
-        elif method == "POST":
-            response = await http_client.post(url, headers=get_headers(), json=data, params=params)
-        elif method == "PUT":
-            response = await http_client.put(url, headers=get_headers(), json=data, params=params)
-        elif method == "DELETE":
-            response = await http_client.delete(url, headers=get_headers(), params=params)
-        else:
-            raise ValueError(f"Método HTTP não suportado: {method}")
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            if method == "GET":
+                response = await client.get(url, headers=get_headers(), params=params)
+            elif method == "POST":
+                response = await client.post(url, headers=get_headers(), json=data, params=params)
+            elif method == "PUT":
+                response = await client.put(url, headers=get_headers(), json=data, params=params)
+            elif method == "DELETE":
+                response = await client.delete(url, headers=get_headers(), params=params)
+            else:
+                raise ValueError(f"Método HTTP não suportado: {method}")
 
         response.raise_for_status()
         result = response.json()
