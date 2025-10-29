@@ -32,6 +32,19 @@ app.add_middleware(
 )
 
 # ========================
+# INCLUDE ROUTE MODULES
+# ========================
+
+# Import route modules from api/routes/
+from .routes import auth, comments, threads, widget, advanced
+
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(comments.router, prefix="/comments", tags=["comments"])
+app.include_router(threads.router, prefix="/threads", tags=["threads"])
+app.include_router(widget.router, prefix="/widget", tags=["widget"])
+app.include_router(advanced.router, prefix="/api", tags=["api"])
+
+# ========================
 # BASIC ROUTES
 # ========================
 
