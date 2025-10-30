@@ -10,7 +10,7 @@ from datetime import datetime
 import asyncio
 
 # Configuration
-NOCODEBACKEND_URL = "https://openapi.nocodebackend.com"
+NOCODEBACKEND_URL = "https://api.nocodebackend.com"
 INSTANCE = os.getenv("INSTANCE", "41300_teste")
 API_KEY = os.getenv("NOCODEBACKEND_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
