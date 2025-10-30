@@ -38,30 +38,50 @@ async def register(user: UserCreate) -> Dict[str, Any]:
 @router.post("/login")
 async def login(credentials: UserLogin) -> Dict[str, Any]:
     """Login do usuário (simplificado)"""
-    # Busca usuário por email
-    result = await nocodebackend_request(
-        "GET",
-        "read/users",
-        params={"email": credentials.email}
-    )
+    print(f"DEBUG: Login attempt for email: {credentials.email}")
 
-    users = result if isinstance(result, list) else result.get("data", [])
+    try:
+        # Busca usuário por email
+        print("DEBUG: Fetching user from database")
+        result = await nocodebackend_request(
+            "GET",
+            "read/users",
+            params={"email": credentials.email}
+        )
+        print(f"DEBUG: Database result: {result}")
 
-    if not users:
-        logger.warning("login_attempt_failed", email=credentials.email, reason="user_not_found")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        users = result if isinstance(result, list) else result.get("data", [])
+        print(f"DEBUG: Users found: {len(users) if users else 0}")
 
-    user = users[0]
+        if not users:
+            print(f"DEBUG: No users found for email: {credentials.email}")
+            logger.warning("login_attempt_failed", email=credentials.email, reason="user_not_found")
+            raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Verifica senha
-    if user.get("password_hash") != hash_password(credentials.password):
-        logger.warning("login_attempt_failed", email=credentials.email, reason="invalid_password")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        user = users[0]
+        print(f"DEBUG: User found: {user.get('id')}")
 
-    # Em produção, gerar JWT token aqui
-    return {
-        "user_id": user.get("id"),
-        "name": user.get("name"),
-        "email": user.get("email"),
-        "message": "Login successful"
-    }
+        # Verifica senha
+        expected_hash = hash_password(credentials.password)
+        actual_hash = user.get("password_hash")
+        print(f"DEBUG: Password check - expected: {expected_hash}, actual: {actual_hash}")
+
+        if actual_hash != expected_hash:
+            print("DEBUG: Password mismatch")
+            logger.warning("login_attempt_failed", email=credentials.email, reason="invalid_password")
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        print("DEBUG: Login successful")
+        # Em produção, gerar JWT token aqui
+        return {
+            "user_id": user.get("id"),
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "message": "Login successful"
+        }
+
+    except Exception as e:
+        print(f"DEBUG: Login exception: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        raise
